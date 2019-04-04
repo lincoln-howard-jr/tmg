@@ -4,7 +4,8 @@ var app = express();
 app.get('/', function(req, res) {
   res.send({
     uri: process.env.MONGODB_URI,
-    project: process.env.PROJECT_ID
+    project: process.env.PROJECT_ID,
+    l: 'l'
   });
 });
 
