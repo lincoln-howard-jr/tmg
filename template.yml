@@ -26,7 +26,7 @@ Globals:
 Resources:
   HelloWorld:
     Type: AWS::Serverless::Function
-    awsKmsKeyArn: 'arn:aws:codestar:us-east-1:687285989071:project/tmg'
+    awsKmsKeyArn: 'arn:aws:kms:us-east-1:687285989071:key/cbbf6f0a-c4cd-4c8a-b202-a6038e8b7d90'
     Properties:
       Handler: index.handler
       Runtime: nodejs8.10
