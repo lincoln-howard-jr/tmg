@@ -13,9 +13,13 @@ const decryptEnv = (env) => {
 }
 
 app.get('/', async (req, res) => {
-  res.send({
-    uri: await decryptEnv ('MONGODB_URI')
-  });
+  try {
+    res.send({
+      uri: await decryptEnv ('MONGODB_URI')
+    });
+  } catch (e) {
+    res.send ({e});
+  }
 });
 
 app.post('/', function(req, res) {
