@@ -1,10 +1,20 @@
 var express = require('express');
 var app = express();
+const aws = require ('aws-sdk');
+let kms = new aws.KMS ();
 
-app.get('/', function(req, res) {
+const decryptEnv = (env) => {
+  return new Promise ((resolve, reject) => {
+    kms.decrypt ({CiphertextBlob: new Buffer (process.env [env], 'base64')}, (err, data) => {
+      if (err) return reject (err);
+      resolve (data);
+    });
+  });
+}
+
+app.get('/', async (req, res) => {
   res.send({
-    uri: process.env.MONGODB_URI,
-    l: 'l'
+    uri: await decryptEnv ('MONGODB_URI')
   });
 });
 

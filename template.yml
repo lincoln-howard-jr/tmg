@@ -26,6 +26,7 @@ Globals:
 Resources:
   HelloWorld:
     Type: AWS::Serverless::Function
+    awsKmsKeyArn: 'arn:aws:codestar:us-east-1:687285989071:project/tmg'
     Properties:
       Handler: index.handler
       Runtime: nodejs8.10
@@ -36,8 +37,6 @@ Resources:
             AQICAHgGhkb56RBFg2YyXoyhPFL7oxMG/NMH8bjZMF0VLu88dwFygHc68ApZcmaCEiKKQghyAAAAtTCBsgYJKoZIhvcNAQcGoIGkMIGhAgEAMIGbBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDExsYhJ4h8/OmYlqugIBEIBuxJle0hEDRGt+24D6cj5M5K2owimY9owD7psG3v7DzdPJuh0bm4SwNLR0xWpgJtMs1Sqq2ysa9L7vNvCHDwadkHwgbf6SGzzA3bqsWHU8jg1mA7CH46Yl3Gm64OBHdMEMMu2SkkYf6cQsmbrQIKQ=
           SECRET: >-
             AQICAHgGhkb56RBFg2YyXoyhPFL7oxMG/NMH8bjZMF0VLu88dwHfDswtgTLxmhBj7/q7OzstAAAAcjBwBgkqhkiG9w0BBwagYzBhAgEAMFwGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM6y3lxfumQY6BiqosAgEQgC8wq4uVnNlm1448jUlNW5Pvjb02fhN7iyqLOSXvsmA1WXURnJEd2pDYxTmswkeZ5A==
-      Tags:
-        'awscodestar:projectArn': 'arn:aws:codestar:us-east-1:687285989071:project/tmg'
       Role:
         Fn::GetAtt:
         - LambdaExecutionRole
