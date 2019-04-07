@@ -5,7 +5,7 @@ let kms = new aws.KMS ({region: 'us-east-1'});
 
 const decryptEnv = (env) => {
   return new Promise ((resolve, reject) => {
-    kms.decrypt ({CiphertextBlob: new Buffer (process.env [env], 'utf-8')}, (err, data) => {
+    kms.decrypt ({CiphertextBlob: new Buffer (process.env [env])}, (err, data) => {
       if (err) return reject (err);
       resolve (data.Plaintext.toString ());
     });
