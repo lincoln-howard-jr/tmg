@@ -1,30 +1,32 @@
 var express = require('express');
-var app = express();
-const aws = require ('aws-sdk');
-let kms = new aws.KMS ({region: 'us-east-1'});
-
-const decryptEnv = (env) => {
-  return new Promise ((resolve, reject) => {
-    kms.decrypt ({CiphertextBlob: new Buffer (process.env [env], 'base64')}, (err, data) => {
-      console.log (err, data);
-      if (err) return reject (err);
-      resolve (data.Plaintext.toString ());
-    });
-  });
-}
-
-app.get('/', async (req, res) => {
+var app = express ();
+let decryptEnv = require ('./config/decryptEnv');
+let mongoose = require ('mongoose');
+(async (env) => {
   try {
-    res.send({
-      uri: await decryptEnv ('MONGODB_URI')
+    let connectionString = await decryptEnv (env)
+    mongoose.connect (connectionString, (err) => {
+      console.log (err);
     });
   } catch (e) {
-    res.send ({e});
+    console.log (e);
   }
-});
+})// ('MONGODB_URI');
+(async () => {
+  try {
+    let mongodbUri = await decryptEnv ('MONGODB_URI');
+    app.get ('/', (req, res) => {
+      res.json ({mongodbUri});
+    })
+  } catch (e) {
+    app.get ('/', (req, res) => {
+      res.json ({e});
+    });
+  }
+}) ();
 
 app.post('/', function(req, res) {
-  res.send({
+  res.json ({
     "Output": "Hello World!"
   });
 });
