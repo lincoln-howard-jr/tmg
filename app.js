@@ -1,20 +1,10 @@
 var express = require('express');
 var app = express ();
-let decryptEnv = require ('./config/decryptEnv');
 let mongoose = require ('mongoose');
-(async (env) => {
-  try {
-    let connectionString = await decryptEnv (env)
-    mongoose.connect (connectionString, (err) => {
-      console.log (err);
-    });
-  } catch (e) {
-    console.log (e);
-  }
-})// ('MONGODB_URI');
+let getEnv = require ('./getEnv');
 (async () => {
   try {
-    let mongodbUri = await decryptEnv ('MONGODB_URI');
+    let mongodbUri = await getEnv ('dbUri');
     app.get ('/', (req, res) => {
       res.json ({mongodbUri});
     })
