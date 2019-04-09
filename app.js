@@ -2,11 +2,22 @@ var express = require('express');
 var app = express ();
 let mongoose = require ('mongoose');
 let getEnv = require ('./getEnv');
+
+const connectToDb = async (dbUri) => {
+  return new Promise ((resolve, reject) => {
+    mongoose.connect (dbUri, err => {
+      if (err) return reject (err);
+      resolve ();
+    })
+  });
+}
+
 (async () => {
   try {
-    let mongodbUri = await getEnv ('dbUri');
+    let dbUri = await getEnv ('dbUri');
+    await connectToDb (dbUri);
     app.get ('/', (req, res) => {
-      res.json ({mongodbUri});
+      res.json ('db connected successfully');
     })
   } catch (e) {
     app.get ('/', (req, res) => {
