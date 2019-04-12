@@ -6,5 +6,8 @@ const app = require('../app.js');
 
 const request = supertest(app);
 
-describe('Tests app', function() {
+describe('Tests app', function () {
+  it ('will pass', (done) => {
+    done ()
+  })
 });
