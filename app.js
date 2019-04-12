@@ -2,36 +2,34 @@ var express = require('express');
 var app = express ();
 let mongoose = require ('mongoose');
 let getEnv = require ('./getEnv');
+let sessions = require ('./config/sessions');
+global.passport = require ('passport');
+// body parser imports
+let bgs = require ('./config/bgs');
+let {json, urlencoded} = require ('body-parser');
 
-const connectToDb = async (dbUri) => {
-  return new Promise ((resolve, reject) => {
-    mongoose.connect (dbUri, err => {
-      if (err) return reject (err);
-      resolve ();
-    })
-  });
-}
+let connected = false;
 
-(async () => {
+const connectToDb = async (req, res, next) => {
   try {
+    if (connected) return next ();
     let dbUri = await getEnv ('dbUri');
-    await connectToDb (dbUri);
-    app.get ('/', (req, res) => {
-      res.json ('db connected successfully');
-    })
+    mongoose.connect (dbUri, err => {
+      if (err) return res.status (500).json ({err});
+      connected = true;
+      return next ();
+    }, { useNewUrlParser: true });
   } catch (e) {
-    app.get ('/', (req, res) => {
-      res.json ({e});
-    });
+    return res.status (500).json ({reason: 'could not connect to database'});
   }
-}) ();
-
-app.post('/', function(req, res) {
-  res.json ({
-    "Output": "Hello World!"
-  });
+}
+app.use (connectToDb);
+app.use (bgs ());
+app.use (json ());
+app.use (urlencoded ({extended: true}));
+// import and use controllers
+'UserController.js'.split (' ').forEach (controller => {
+  app.use ('/api', require ('./controllers/' + controller))
 });
-
-
 // Export your Express configuration so that it can be consumed by the Lambda handler
 module.exports = app

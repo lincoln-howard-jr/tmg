@@ -1,24 +1,22 @@
 'use strict'
 // imports
+let mongoose = require ('mongoose');
 let is = require ('type-is');
 let Grid = require ('gridfs-stream');
 let Busboy = require ('busboy');
 let File = require ('../models/File');
 // need mongoose to export middleware
-module.exports = function (mongoose) {
+module.exports = function () {
   let ObjectId, gfs;
-  setTimeout (() => {
-    console.log ('setting up busboy gfs store');
+  // the middleware function itself
+  return function (req, res, next) {
+    if (!is (req, ['multipart/form-data'])) return next ();
+    if (!req.user) return res.status (401).end ();
     // the object id constructor
     ObjectId = mongoose.mongo.ObjectId;
     // create gridfs instance
     Grid.mongo = mongoose.mongo;
     gfs = Grid (mongoose.connection.db);
-  }, 3500);
-  // the middleware function itself
-  return function (req, res, next) {
-    if (!is (req, ['multipart/form-data'])) return next ();
-    if (!req.user) return res.status (401).end ();
     console.log ('using bgs');
     // create the body object
     // all fields and files will initially be wrapped in arrays

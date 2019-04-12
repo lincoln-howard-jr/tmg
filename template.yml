@@ -26,17 +26,12 @@ Globals:
 Resources:
   HelloWorld:
     Type: AWS::Serverless::Function
-    awsKmsKeyArn: 'arn:aws:kms:us-east-1:687285989071:key/cbbf6f0a-c4cd-4c8a-b202-a6038e8b7d90'
     Properties:
       Handler: index.handler
       Runtime: nodejs8.10
       Environment:
         Variables:
           NODE_ENV: production
-          MONGODB_URI: >-
-            QVFJQ0FIZ0doa2I1NlJCRmcyWXlYb3loUEZMN294TUcvTk1IOGJqWk1GMFZMdTg4ZHdHcFBMWWlDYXhqOEpCNVFBNzZOL2NGQUFBQXRUQ0JzZ1lKS29aSWh2Y05BUWNHb0lHa01JR2hBZ0VBTUlHYkJna3Foa2lHOXcwQkJ3RXdIZ1lKWUlaSUFXVURCQUV1TUJFRURDYUdYNThRSDdaNExCWlRIQUlCRUlCdUdHbTFHZHZLa3NlVkNBcjluL2lNazFjN1o3MFdiOHNVQlNpSy9ISHRFY3FYVXd6UkZNd25vM3I0RDJUeE9FTGVUTTFpajJUNGc3K0o1b1NUTG90QUtMeTBvS0J0dE8yMk9YcktWWUxRUlBFTFRrVkZhZmVuRTFSNFlnWGt4akxzdE8rbzNtcWYvZDczK1RYditTZz0K
-          SECRET: >-
-            AQICAHgGhkb56RBFg2YyXoyhPFL7oxMG/NMH8bjZMF0VLu88dwFKKT+TO417fDa29fYmSWMXAAAAwjCBvwYJKoZIhvcNAQcGoIGxMIGuAgEAMIGoBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDJHP4EiKBSmaZ8e/PAIBEIB7AY3T90bqqJrWgl7np42BxCNouSm3TCYBM1+wxrwYyZ6OWG6LEMdao6f+BmTrF6ApLmmnP1sd36iE2pecx41EhgdA265B5NLFDSuEiiH2oPjjqGLFGuZMg6aEVy0JCiXlkqboTB1Tj4PLZivyiYT0MXTZWO+zh6Tq3qW8
       Role:
         Fn::GetAtt:
         - LambdaExecutionRole
