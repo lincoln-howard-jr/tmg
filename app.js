@@ -14,6 +14,7 @@ const connectToDb = async (req, res, next) => {
   try {
     if (connected) return next ();
     let dbUri = await getEnv ('dbUri');
+    req.dbUri = dbUri;
     mongoose.connect (dbUri, err => {
       if (err) return res.status (500).json ({err});
       connected = true;
@@ -24,6 +25,7 @@ const connectToDb = async (req, res, next) => {
   }
 }
 app.use (connectToDb);
+app.use (sessions);
 app.use (bgs ());
 app.use (json ());
 app.use (urlencoded ({extended: true}));

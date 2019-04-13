@@ -79,7 +79,12 @@ router.get ('/me', async (req, res) => {
 })
 
 router.put ('/me', async (req, res) => {
-  res.status (404).json ({reason: 'handler not written'});
+  if (!req.user) return res.status (404).end ();
+  ['preferences', 'profilePicture'].forEach ((prop) => {
+    if (req.body [prop]) req.user [prop] = req.body [prop];
+  });
+  req.user.save ();
+  res.json ({echo: req.body});
 });
 
 router.delete ('/me', async (req, res) => {
