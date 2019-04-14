@@ -40,12 +40,12 @@ Resources:
         GetEvent:
           Type: Api
           Properties:
-            Path: /
+            Path: /{any+}
             Method: get
         PostEvent:
           Type: Api
           Properties:
-            Path: /
+            Path: /{any+}
             Method: post
   LambdaExecutionRole:
     Description: Creating service role in IAM for AWS Lambda
