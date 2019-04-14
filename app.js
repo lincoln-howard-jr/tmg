@@ -21,7 +21,7 @@ const connectToDb = async (req, res, next) => {
       return next ();
     }, { useNewUrlParser: true });
   } catch (e) {
-    return res.status (500).json ({reason: 'could not connect to database'});
+    return res.status (500).json ({reason: 'could not connect to database', e});
   }
 }
 app.use (connectToDb);
