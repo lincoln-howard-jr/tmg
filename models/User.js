@@ -16,25 +16,12 @@ let UserSchema = new mongoose.Schema ({
     type: String,
     required: true
   },
+  phone: String,
   first: String,
   last: String,
   createdAt: {
     type: Date,
     default: Date.now
-  },
-  lastActive: {
-    type: Date,
-    default: Date.now
-  },
-  preferences: {
-    language: {
-      type: String,
-      default: 'en'
-    }
-  },
-  location: {
-    country: String,
-    state: String
   },
   admin: {
     type: Boolean,
@@ -43,11 +30,6 @@ let UserSchema = new mongoose.Schema ({
   profilePicture: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'File'
-  },
-  votes: {
-    purchased: {type: Number, default: 0},
-    left: {type: Number, default: 0},
-    cast: {type: Number, default: 0}
   }
 });
 // create text search

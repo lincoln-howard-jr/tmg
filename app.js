@@ -8,6 +8,18 @@ global.passport = require ('passport');
 let bgs = require ('./config/bgs');
 let {json, urlencoded} = require ('body-parser');
 
+const logger = (req, res, next) => {
+  let r = `${req.method.toUpperCase ()} ${req.path}`;
+  let b = !req.body ? '' : ('body: ' + JSON.stringify (req.body, null, 2));
+  let u = !req.user ? 'no user logged in' : `username=${req.user.username}`;
+  console.log (`
+    ${r}
+    ${b}
+    ${u}
+  `);
+  next ();
+}
+
 let connected = false;
 
 const connectToDb = async (req, res, next) => {
@@ -21,6 +33,7 @@ const connectToDb = async (req, res, next) => {
       return next ();
     }, { useNewUrlParser: true });
   } catch (e) {
+    console.log (e);
     return res.status (500).json ({reason: 'could not connect to database', e});
   }
 }
@@ -29,8 +42,9 @@ app.use (sessions);
 app.use (bgs ());
 app.use (json ());
 app.use (urlencoded ({extended: true}));
+app.use (logger);
 // import and use controllers
-'UserController.js'.split (' ').forEach (controller => {
+'UserController.js ForumController.js'.split (' ').forEach (controller => {
   app.use ('/api', require ('./controllers/' + controller))
 });
 // Export your Express configuration so that it can be consumed by the Lambda handler

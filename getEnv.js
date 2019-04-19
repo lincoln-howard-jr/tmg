@@ -8,6 +8,7 @@ module.exports = (name) => {
       let decrypted = await kms.decrypt ({CiphertextBlob: Buffer (env [name], 'base64')}).promise ();
       resolve (decrypted.Plaintext.toString ());
     } catch (e) {
+      console.log (e)
       reject (e);
     }
   });
