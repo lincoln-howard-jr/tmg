@@ -30,6 +30,7 @@ const connectToDb = async (req, res, next) => {
     mongoose.connect (dbUri, err => {
       if (err) return res.status (500).json ({err});
       connected = true;
+      console.log ('connection successful');
       return next ();
     }, { useNewUrlParser: true });
   } catch (e) {

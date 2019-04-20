@@ -28,8 +28,11 @@ module.exports = async (req, res, next) => {
     require ('./passport');
     // chain all functions together
     cookieParser (req, res, () => {
+      console.log ('cookies parsed');
       runSesh (req, res, () => {
+        console.log ('express session run');
         passport.initialize () (req, res, () => {
+          console.log ('passport initialized')
           passport.session () (req, res, next)
         })
       })

@@ -8,6 +8,7 @@ let File = require ('../models/File');
 // need mongoose to export middleware
 module.exports = function () {
   let ObjectId, gfs;
+  console.log ('bgs middleware added');
   // the middleware function itself
   return function (req, res, next) {
     if (!is (req, ['multipart/form-data'])) return next ();
@@ -17,7 +18,6 @@ module.exports = function () {
     // create gridfs instance
     Grid.mongo = mongoose.mongo;
     gfs = Grid (mongoose.connection.db);
-    console.log ('using bgs');
     // create the body object
     // all fields and files will initially be wrapped in arrays
     let body = new Map ();
