@@ -23,11 +23,13 @@ const logger = (req, res, next) => {
 let connected = false;
 
 const connectToDb = async (req, res, next) => {
+  console.log ('connecting to db');
   try {
     if (connected) return next ();
     let dbUri = await getEnv ('dbUri');
     req.dbUri = dbUri;
     mongoose.connect (dbUri, err => {
+      console.log (err);
       if (err) return res.status (500).json ({err});
       connected = true;
       console.log ('connection successful');
@@ -38,12 +40,12 @@ const connectToDb = async (req, res, next) => {
     return res.status (500).json ({reason: 'could not connect to database', e});
   }
 }
+app.use (logger);
 app.use (connectToDb);
 app.use (sessions);
 app.use (bgs ());
 app.use (json ());
 app.use (urlencoded ({extended: true}));
-app.use (logger);
 // import and use controllers
 'UserController.js ForumController.js'.split (' ').forEach (controller => {
   app.use ('/api', require ('./controllers/' + controller))

@@ -8,7 +8,6 @@ let File = require ('../models/File');
 // need mongoose to export middleware
 module.exports = function () {
   let ObjectId, gfs;
-  console.log ('bgs middleware added');
   // the middleware function itself
   return function (req, res, next) {
     if (!is (req, ['multipart/form-data'])) return next ();
