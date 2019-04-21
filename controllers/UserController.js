@@ -14,12 +14,15 @@ const objectIdEquals = (a, b) => {
 // user controller section
 //
 router.get ('/users', async (req, res) => {
-  try { 
+  try {
     let limit = req.query.limit || 10;
     let offset = req.query.offset || 0;
     let q = {};
+    console.log ('running db query');
     let users = await User.find (q).skip (offset).limit (limit).select ('_id username first last lastActive createdAt profilePicture').exec ();
+    console.log ('query complete');
     res.json (users);
+    console.log ('responded with users');
   } catch (e) {
     console.log (e);
     res.status (500).end ();
