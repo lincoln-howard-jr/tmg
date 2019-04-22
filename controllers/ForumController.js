@@ -7,14 +7,17 @@ const objectIdEquals = (a, b) => {
   return a.toString () === b.toString ();
 }
 
-const defaults = {
-  limit: 10,
-  skip: 0
+const defaults = (query, limit="limit", skip="skip") => {
+  return {
+    limit: query [limit] || 10,
+    skip: query [skip] || 0
+  }
 }
 
 router.get ('/forums', async (req, res) => {
+  let {skip, limit} = defaults (req.query);
   try {
-    let raw = await Forum.find ({}).skip (defaults.skip).limit (defaults.limit).lean ().exec ();
+    let raw = await Forum.find ({}).skip (skip).limit (limit).lean ().exec ();
     let forums = await Promise.all (raw.map (forum => new Promise (async (resolve, reject) => {
       try {
         let comments = await Comment.find ({forum: forum._id}).skip (defaults.skip).limit (defaults.limit).lean ().exec ();
@@ -63,8 +66,9 @@ router.post ('/forums', async (req, res) => {
 });
 
 router.get ('/forums/:id/comments', async (req, res) => {
+  let {skip, limit} = defaults (req.query);
   try {
-    let comments = await Comment.find ({forum: req.params.id}).skip (defaults.skip).limit (defaults.limit).lean ().exec ();
+    let comments = await Comment.find ({forum: req.params.id}).skip (skip).limit (limit).lean ().exec ();
     res.json (comments);
   } catch (e) {
     console.log (e);
