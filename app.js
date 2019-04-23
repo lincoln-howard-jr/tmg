@@ -57,5 +57,10 @@ app.use (logger);
 'UserController.js ForumController.js'.split (' ').forEach (controller => {
   app.use ('/api', require ('./controllers/' + controller))
 });
+
+app.get ('/', (req, res) => {
+  res.json ({empty: true});
+})
+
 // Export your Express configuration so that it can be consumed by the Lambda handler
 module.exports = app
