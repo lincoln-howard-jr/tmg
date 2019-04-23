@@ -141,6 +141,7 @@ router.get ('/files/:id', async (req, res) => {
       if (err || !found) return res.status (404).end ();
       // send headers and file
       res.set ('Content-Type', file.mime);
+      res.set ('Cache-Control', `max-age=${60 * 60 * 24 * 31}`);
       gfs.createReadStream ({
         _id: file.file
       }).pipe (res);

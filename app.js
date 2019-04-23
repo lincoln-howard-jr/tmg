@@ -40,12 +40,19 @@ const connectToDb = async (req, res, next) => {
     return res.status (500).json ({reason: 'could not connect to database', e});
   }
 }
-app.use (logger);
+
+const enableCors = (req, res, next) => {
+  res.set ('Access-Control-Allow-Origin', '*');
+  next ();
+}
+
 app.use (connectToDb);
 app.use (sessions);
 app.use (bgs ());
 app.use (json ());
 app.use (urlencoded ({extended: true}));
+app.use (enableCors);
+app.use (logger);
 // import and use controllers
 'UserController.js ForumController.js'.split (' ').forEach (controller => {
   app.use ('/api', require ('./controllers/' + controller))
