@@ -62,5 +62,9 @@ app.get ('/', (req, res) => {
   res.json ({empty: true});
 })
 
+app.options ('/', enableCors, (req, res) => {
+  res.status (200).end ();
+})
+
 // Export your Express configuration so that it can be consumed by the Lambda handler
 module.exports = app
