@@ -43,15 +43,16 @@ const connectToDb = async (req, res, next) => {
 
 const enableCors = (req, res, next) => {
   res.set ('Access-Control-Allow-Origin', '*');
+  res.set ('Access-Control-Allow-Methods', 'OPTIONS,GET,POST');
   next ();
 }
 
+app.use (enableCors);
 app.use (connectToDb);
 app.use (sessions);
 app.use (bgs ());
 app.use (json ());
 app.use (urlencoded ({extended: true}));
-app.use (enableCors);
 app.use (logger);
 // import and use controllers
 'UserController.js ForumController.js'.split (' ').forEach (controller => {
@@ -62,7 +63,7 @@ app.get ('/', (req, res) => {
   res.json ({empty: true});
 })
 
-app.options ('/', enableCors, (req, res) => {
+app.options ('/', (req, res) => {
   res.status (200).end ();
 })
 
