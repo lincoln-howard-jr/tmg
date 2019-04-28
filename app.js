@@ -60,12 +60,8 @@ app.use (logger);
   app.use ('/api', require ('./controllers/' + controller))
 });
 
-app.get ('/', (req, res) => {
-  res.json ({empty: true});
-})
-
 app.options ('*', (req, res) => {
-  res.status (200).end ();
+  res.status (200).json ({options: true});
 })
 
 // Export your Express configuration so that it can be consumed by the Lambda handler
