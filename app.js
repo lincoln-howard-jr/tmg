@@ -43,7 +43,7 @@ const connectToDb = async (req, res, next) => {
 
 const enableCors = (req, res, next) => {
   res.set ('Access-Control-Allow-Origin', '*');
-  res.set ('Access-Control-Allow-Methods', 'OPTIONS,GET,POST');
+  res.set ('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE');
   res.set ('Access-Control-Allow-Headers', '*')
   next ();
 }
