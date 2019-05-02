@@ -42,7 +42,7 @@ const connectToDb = async (req, res, next) => {
 }
 
 const enableCors = (req, res, next) => {
-  res.set ('Access-Control-Allow-Origin', '*');
+  res.set ('Access-Control-Allow-Origin', 'dflag8enurd16.cloudfront.net');
   res.set ('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE');
   res.set ('Access-Control-Allow-Headers', '*')
   res.set ('ACcess-Control-Allow-Credentials', true)
@@ -55,7 +55,6 @@ app.use (sessions);
 app.use (bgs ());
 app.use (json ());
 app.use (urlencoded ({extended: true}));
-app.use (logger);
 // import and use controllers
 'UserController.js ForumController.js'.split (' ').forEach (controller => {
   app.use ('/api', require ('./controllers/' + controller))
