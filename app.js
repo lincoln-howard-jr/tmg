@@ -42,7 +42,7 @@ const connectToDb = async (req, res, next) => {
 }
 
 const enableCors = (req, res, next) => {
-  res.set ('Access-Control-Allow-Origin', 'dflag8enurd16.cloudfront.net');
+  res.set ('Access-Control-Allow-Origin', 'https://dflag8enurd16.cloudfront.net');
   res.set ('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE');
   res.set ('Access-Control-Allow-Headers', '*')
   res.set ('ACcess-Control-Allow-Credentials', true)
