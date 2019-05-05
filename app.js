@@ -49,6 +49,10 @@ const enableCors = (req, res, next) => {
   next ();
 }
 
+app.options ('*', enableCors, (req, res) => {
+  res.status (200).json ({options: true});
+})
+
 app.use (enableCors);
 app.use (connectToDb);
 app.use (sessions);
@@ -59,10 +63,5 @@ app.use (urlencoded ({extended: true}));
 'UserController.js ForumController.js'.split (' ').forEach (controller => {
   app.use ('/api', require ('./controllers/' + controller))
 });
-
-app.options ('*', (req, res) => {
-  res.status (200).json ({options: true});
-})
-
 // Export your Express configuration so that it can be consumed by the Lambda handler
 module.exports = app
