@@ -42,7 +42,7 @@ const connectToDb = async (req, res, next) => {
 }
 
 const enableCors = (req, res, next) => {
-  res.set ('Access-Control-Allow-Origin', 'https://www.themetropolitanglobal.com,https://www.metropolitanglobal.com');
+  res.set ('Access-Control-Allow-Origin', '*');
   res.set ('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE');
   res.set ("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.set ('ACcess-Control-Allow-Credentials', true)
