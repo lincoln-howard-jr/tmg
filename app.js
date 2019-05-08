@@ -7,6 +7,7 @@ global.passport = require ('passport');
 // body parser imports
 let bgs = require ('./config/bgs');
 let {json, urlencoded} = require ('body-parser');
+const cors = require ('cors');
 
 const logger = (req, res, next) => {
   let r = `${req.method.toUpperCase ()} ${req.path}`;
@@ -41,19 +42,9 @@ const connectToDb = async (req, res, next) => {
   }
 }
 
-const enableCors = (req, res, next) => {
-  res.set ('Access-Control-Allow-Origin', '*');
-  res.set ('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE');
-  res.set ("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  res.set ('ACcess-Control-Allow-Credentials', true)
-  next ();
-}
+app.options ('*', cors ());
 
-app.options ('*', enableCors, (req, res) => {
-  res.status (200).json ({options: true});
-})
-
-app.use (enableCors);
+app.use (cors ());
 app.use (connectToDb);
 app.use (sessions);
 app.use (bgs ());
