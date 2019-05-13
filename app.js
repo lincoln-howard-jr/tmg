@@ -42,7 +42,7 @@ const connectToDb = async (req, res, next) => {
   }
 }
 
-app.options ('*', cors ());
+app.options ('*', cors ({optionsSuccessStatus: 200}));
 
 app.use (cors ());
 app.use (connectToDb);
