@@ -52,7 +52,7 @@ const origin = (origin, callback) => {
 }
 
 
-app.options ('*', cors ({origin, optionsSuccessStatus: 200}));
+app.options ('*', cors ({origin, credentials: true, optionsSuccessStatus: 200}));
 
 app.use (cors ({origin}));
 app.use (connectToDb);
