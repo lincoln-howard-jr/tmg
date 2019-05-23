@@ -43,18 +43,20 @@ const connectToDb = async (req, res, next) => {
 }
 
 const whitelist = ['https://www.themetropolitanglobal.com', 'http://www.metropolitanglobal.com']
-const origin = (origin, callback) => {
-  if (whitelist.indexOf(origin) !== -1) {
-    callback(null, true)
-  } else {
-    callback(new Error('Not allowed by CORS'))
-  }
+const cors = (req, res, next) => {
+  if (whitelist.indexOf (req.headers.origin) === -1) return res.status (403).json ({reason: 'CORS not enabled'});
+  res.set ('Access-Control-Allow-Origin', req.headers.origin);
+  res.set ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.set ('Access-Control-Allow-Headers', '*');
+  res.set ('Access-Control-Allow-Credentials', true);
+  next ();
 }
 
+app.options ('*', cors, (req, res) => {
+  res.json ({cors: true});
+});
 
-app.options ('*', cors ({origin, credentials: true, optionsSuccessStatus: 200}));
-
-app.use (cors ({origin}));
+app.use (cors);
 app.use (connectToDb);
 app.use (sessions);
 app.use (bgs ());
