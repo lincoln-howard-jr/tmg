@@ -7,7 +7,6 @@ global.passport = require ('passport');
 // body parser imports
 let bgs = require ('./config/bgs');
 let {json, urlencoded} = require ('body-parser');
-const cors = require ('cors');
 
 const logger = (req, res, next) => {
   let r = `${req.method.toUpperCase ()} ${req.path}`;
