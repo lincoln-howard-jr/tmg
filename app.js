@@ -46,7 +46,7 @@ const cors = (req, res, next) => {
   if (whitelist.indexOf (req.headers.origin) === -1) return res.status (403).json ({reason: 'CORS not enabled'});
   res.set ('Access-Control-Allow-Origin', req.headers.origin);
   res.set ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.set ('Access-Control-Allow-Headers', '*');
+  res.set ('Access-Control-Allow-Headers', 'content-type, origin, accept');
   res.set ('Access-Control-Allow-Credentials', true);
   next ();
 }
