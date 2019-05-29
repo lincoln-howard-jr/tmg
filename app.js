@@ -41,7 +41,7 @@ const connectToDb = async (req, res, next) => {
   }
 }
 
-const whitelist = ['https://www.themetropolitanglobal.com', 'http://www.metropolitanglobal.com']
+const whitelist = ['https://www.themetropolitanglobal.com', 'https://www.metropolitanglobal.com']
 const cors = (req, res, next) => {
   if (whitelist.indexOf (req.headers.origin) === -1) return res.status (403).json ({reason: 'CORS not enabled'});
   res.set ('Access-Control-Allow-Origin', req.headers.origin);
