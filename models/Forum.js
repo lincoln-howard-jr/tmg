@@ -1,34 +1,19 @@
-const mongoose = require ('mongoose');
+const {Schema, model, user, reqStr, file, now} = require ('./types');
 
-const ForumSchema= new mongoose.Schema ({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  title: {
-    type: String,
-    required: true
-  },
-  description: {
-    type: String,
-    required: true
-  },
-  image: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'File'
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+const ForumSchema = new Schema ({
+  user,
+  title: reqStr,
+  description: reqStr,
+  image: file,
+  createdAt: now
 });
 
 function populate () {
   this.populate ({path: 'user', select: '_id first last username lastActive profilePicture'})
+  this.populate ({path: 'image', select: '_id user name alt mime extension'});
 }
 ForumSchema.pre ('findOne', populate);
 ForumSchema.pre ('findById', populate);
 ForumSchema.pre ('find', populate);
 
-module.exports = mongoose.model ('Forum', ForumSchema);
+module.exports = model ('Forum', ForumSchema);

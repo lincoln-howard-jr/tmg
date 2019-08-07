@@ -1,35 +1,31 @@
 // imports
-let mongoose = require ('mongoose');
+let {mongoose, file, reqStr, now} = require ('./types');
 let {genSalt, hash, compare} = require ('bcrypt-nodejs');
 // define user Schema
 let UserSchema = new mongoose.Schema ({
   username: {
-    type: String,
-    required: true,
+    ...reqStr,
     unique: true
   },
-  password: {
-    type: String,
-    required: true
-  },
-  email: {
-    type: String,
-    required: true
-  },
+  password: reqStr,
+  email: reqStr,
   phone: String,
-  first: String,
-  last: String,
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
+  first: reqStr,
+  last: reqStr,
+  createdAt: now,
   admin: {
     type: Boolean,
     default: false
   },
-  profilePicture: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'File'
+  profilePicture: file,
+  stripeCustomerId: String,
+  subscribed: {
+    type: Boolean,
+    default: false
+  },
+  paidThrough: {
+    month: Number,
+    year: Number
   }
 });
 // create text search

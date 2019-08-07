@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express ();
 let mongoose = require ('mongoose');
+const AWS = require ('aws-sdk');
 let getEnv = require ('./getEnv');
 let sessions = require ('./config/sessions');
 global.passport = require ('passport');
@@ -18,6 +19,27 @@ const logger = (req, res, next) => {
     ${u}
   `);
   next ();
+}
+
+let updated = false;
+
+// update aws config
+const updateAWSConfig = async (req, res, next) => {
+
+  if (updated) return next ();
+
+  let secretAccessKey = await getEnv ('aws_secret_access_key');
+  let accessKeyId = await getEnv ('aws_access_key_id');
+
+  AWS.config.update({
+    secretAccessKey,
+    accessKeyId,
+    region: 'us-east-1'
+  });
+
+  next ();
+  updated = true;
+
 }
 
 let connected = false;
@@ -41,7 +63,7 @@ const connectToDb = async (req, res, next) => {
   }
 }
 
-const whitelist = ['https://www.themetropolitanglobal.com', 'https://www.metropolitanglobal.com']
+const whitelist = ['https://www.themetropolitanglobal.com', 'https://www.metropolitanglobal.com'];
 const cors = (req, res, next) => {
   if (whitelist.indexOf (req.headers.origin) === -1) return res.status (403).json ({reason: 'CORS not enabled'});
   res.set ('Access-Control-Allow-Origin', req.headers.origin);
@@ -51,18 +73,18 @@ const cors = (req, res, next) => {
   next ();
 }
 
-app.options ('*', cors, (req, res) => {
-  res.json ({cors: true});
-});
+// app.options ('*', cors, (req, res) => {
+//   res.json ({cors: true});
+// });
 
-app.use (cors);
+// app.use (cors);
+app.use (updateAWSConfig)
 app.use (connectToDb);
 app.use (sessions);
-app.use (bgs ());
 app.use (json ());
 app.use (urlencoded ({extended: true}));
 // import and use controllers
-'UserController.js ForumController.js'.split (' ').forEach (controller => {
+'ElectionController.js UserController.js ForumController.js PaymentController.js ArticleController.js'.split (' ').forEach (controller => {
   app.use ('/api', require ('./controllers/' + controller))
 });
 // Export your Express configuration so that it can be consumed by the Lambda handler

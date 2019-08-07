@@ -1,135 +1,132 @@
+let Article = require ('../models/Article');
 let Forum = require ('../models/Forum');
 let Comment = require ('../models/Comment');
 let Like = require ('../models/Like');
+let Cause = require ('../models/Cause');
+// shorthand to access commentable/likeable types
+const modelDict = {
+  articles: Article,
+  forums: Forum,
+  comments: Comment,
+  causes: Cause
+}
 
 let router = require ('express').Router ();
 
 const objectIdEquals = (a, b) => {
   return a.toString () === b.toString ();
 }
-
-const defaults = (query, limit="limit", skip="skip") => {
-  return {
-    limit: query [limit] || 10,
-    skip: query [skip] || 0
-  }
+// qs defaults
+const defaults = {
+  offset: 0,
+  limit: 25
 }
-
-const allForums = async (skip=0, limit=10) => {
+// check if an object exists
+const exists = async (type, _id) => {
+  // async method returns promise
   return new Promise (async (resolve, reject) => {
+    // wrap in t/c
     try {
-      let forums = null;
-      if (limit > 1) {
-        forums = await Forum.find ({}).skip (skip).limit (limit).lean ().exec ();
-      } else {
-        forums = await Forum.findOne ({}).lean ().exec ();
-      }
-      console.log (forums);
-      forums = await commentsOn (forums);
-      resolve (forums);
-    } catch (e) {
-      reject (e);
-    }
-  }); 
-}
-
-const commentsOn = async (forums, skip=0, limit=10) => {
-  return new Promise (async (resolve, reject) => {
-    try {
-      let _f = Array.isArray (forums) ? forums : [forums];
-      let result = await Promise.all (_f.map (f => {
-        return new Promise (async (resolve, reject) => {
-          try {
-            let totalComments = await Comment.count ({forum: f._id}).exec ();
-            console.log (totalComments);
-            let comments = await Comment.find ({forum: f._id}).skip (skip).limit (limit).lean ().exec ();
-            comments = await likesOn (comments);
-            console.log (comments);
-            resolve ({
-              ...f,
-              comments,
-              totalComments
-            })
-          } catch (e) {
-            reject (e);
-          }
-        });
-      }));
-      if (Array.isArray (forums)) return resolve (result);
-      resolve (result [0]);
-    } catch (e) {
-      reject (e);
-    }
-  })
-}
-
-const likesOn = async (comments, count=true, users=true, skip=0, limit=100) => {
-  return new Promise (async (resolve, reject) => {
-    try {
-      let _c = Array.isArray (comments) ? comments : [comments];
-      let result = await Promise.all (_c.map (c => {
-        return new Promise (async (resolve, reject) => {
-          try {
-            if (users) {
-              c.likes = await Like.find ({comment: c._id}).skip (skip).limit (limit).lean ().exec ();
-            }
-            if (count) {
-              c.totalLikes = await Like.count ({comment: c._id}).exec ();
-            }
-            resolve (c);
-          } catch (e) {
-            reject (e);
-          }
-        })
-      }));
-      if (Array.isArray (comments)) return resolve (result);
-      resolve (result [0]);
+      // ensure valid type
+      if (!type || !modelDict [type]) throw new TypeError (`"${type}" is not a valid type (articles, forums, comments)`);
+      let results = await modelDict [type].find ({_id}).limit (1).exec ();
+      if (results.length) return resolve (true);
+      resolve (false);
     } catch (e) {
       reject (e);
     }
   });
 }
-
-const didILike = async (comments) => {
-
-}
-
-router.get ('/forums', async (req, res) => {
-  let {skip, limit} = defaults (req.query);
-  try {
-    // let raw = await Forum.find ({}).skip (skip).limit (limit).lean ().exec ();
-    // let forums = await Promise.all (raw.map (forum => new Promise (async (resolve, reject) => {
-    //   try {
-    //     let comments = await Comment.find ({forum: forum._id}).skip (defaults.skip).limit (defaults.limit).lean ().exec ();
-    //     resolve ({
-    //       ...forum,
-    //       comments
-    //     });
-    //   } catch (e) {
-    //     reject (e);
-    //   }
-    // })));
-    // res.json (forums);
-    let forums = await allForums ()
-    res.json (forums);
-  } catch (e) {
-    console.log (e);
-    res.status (500).end ();
-  }
-});
-router.get ('/forums/:id', async (req, res) => {
-  try {
-    let raw = await Forum.findOne ({_id: req.params.id}).lean ().exec ();
-    let forum = {
-      ...raw
+// retrieve all of a certain type
+// default qs provided, alternatively pass in req.query
+const getByType = async (type, query={}) => {
+  // async method returns promise
+  return new Promise (async (resolve, reject) => {
+    // wrap in t/c
+    try {
+      // ensure qs
+      let qs = Object.assign (defaults, query);
+      // ensure valid type
+      if (!type || !modelDict [type]) throw new TypeError (`"${type}" is not a valid type (articles, forums, comments)`);
+      // make query
+      let results = await modelDict [type].find ({}).skip (qs.offset).limit (qs.limit).lean ().exec ();
+      resolve (results);
+    } catch (e) {
+      reject (e);
     }
-    res.json (forum);
+  });
+}
+// retrieve all comments on a certain type object
+// default qs provided, alternatively pass in req.query
+const getCommentsOn = async (type, parent, query={}) => {
+  // async method returns promise
+  return new Promise (async (resolve, reject) => {
+    // wrap in t/c
+    try {
+      // ensure qs
+      let qs = Object.assign (defaults, query);
+      // ensure object found (type checking also done in global#exists)
+      let _exists = await exists (type, parent);
+      if (!_exists) throw 'Object not found...'
+      let results = Comment.find ({parent}).skip (qs.offset).limit (qs.limit).lean ().exec ();
+      resolve (results);
+    } catch (e) {
+      reject (e);
+    }
+  });
+}
+// get like count on a likeable object
+// no type checking
+const getLikeCount = async (type, parent) => {
+  // async method returns promise
+  return new Promise (async (resolve, reject) => {
+    // wrap in t/c
+    try {
+      // ensure object found (type checking also done in global#exists)
+      await exists (type, parent);
+      let results = Like.count ({type, parent}).exec ();
+      resolve (results);
+    } catch (e) {
+      reject (e);
+    }
+  });
+}
+// get whether or not logged in user liked a likeable object
+const didILike = async (user, parent) => {
+  return new Promise (async (resolve, reject) => {
+    try {
+      if (!user) throw 'User not defined';
+      let exists = await Like.exists ({user: user._id, parent});
+      resolve (exists);
+    } catch (e) {
+      reject (e);
+    }
+  })
+}
+router.get ('/articles', async (req, res) => {
+  try {
+    let data = await getByType ('articles', req.query);
+    data = await Promise.all (data.map (article => {
+      return new Promise (async (resolve, reject) => {
+        let likeCount = await getLikeCount ('articles', article);
+        let comments = await getCommentsOn ('articles', article);
+        comments = await Promise.all (comments.map (comment => {
+          return new Promise (async (_res, _rej) => {
+            comment.likeCount = await getLikeCount ('comments', comment._id);
+            // if logged in:
+            if (req.user) comment.didILike = await didILike (req.user, comment);
+            _res (comment);
+          });
+        }));
+        resolve ({...t, likeCount, comments});
+      });
+    }));
+    res.json ();
   } catch (e) {
     console.log (e);
-    res.status (500).end ();
+    res.status (500).json (e);
   }
 });
-
 router.post ('/forums', async (req, res) => {
   try {
     if (!req.user) return res.status (401).end ();
@@ -147,49 +144,23 @@ router.post ('/forums', async (req, res) => {
   }
 });
 
-router.get ('/forums/:id/comments', async (req, res) => {
-  let {skip, limit} = defaults (req.query);
+
+router.get ('/comments/:type/:parent', async (req, res) => {
   try {
-    let comments = await Comment.find ({forum: req.params.id}).skip (skip).limit (limit).lean ().exec ();
+    let comments = await getCommentsOn (req.params.type, req.params.parent);
     res.json (comments);
   } catch (e) {
     console.log (e);
     res.status (500).end ();
   }
-})
-
-router.post ('/forums/:id/comments', async (req, res) => {
-  try {
-    if (!req.user) return res.status (401).end ();
-    let forum = await Forum.findOne ({_id: req.params.id}).exec ();
-    console.log (forum);
-    if (!forum) return res.status (404).end ();
-    let comment = new Comment ({
-      user: req.user._id,
-      forum: req.params.id,
-      comment: req.body.comment
-    });
-    await comment.save ();
-    res.json (comment);
-  } catch (e) {
-    console.log (e);
-    res.status (500).json ({e});
-  }
 });
 
-router.post ('/forums/:fid/comments/:cid/likes', async (req, res) => {
+router.get ('/likes/:type/:parent', async (req, res) => {
   try {
-    if (!req.user) return res.status (401).end ();
-    let comment = await Comment.findOne ({_id: req.params.cid, forum: req.params.fid}).exec ();
-    if (!comment) return res.status (404).end ();
-    await new Like ({comment: comment._id, user: req.user._id}).save ();
-    comment.likes++;
-    await comment.save ();
-    res.json (comment);
+    res.json (await getLikeCount (req.params.type, req.params.parent));
   } catch (e) {
     console.log (e);
-    res.status (500).json ({e});
+    res.status (500).end ();
   }
-})
-
+});
 module.exports = router;

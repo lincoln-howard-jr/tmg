@@ -6,10 +6,12 @@ let LikeSchema = new mongoose.Schema ({
     ref: 'User',
     required: true
   },
-  comment: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Comment',
+  type: {
+    type: String,
     required: true
+  },
+  parnet: {
+    type: mongoose.Schema.Types.ObjectId
   }
 })
 

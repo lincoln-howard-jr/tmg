@@ -3,7 +3,38 @@ let express = require ('express');
 let mongoose = require ('mongoose');
 let User = require ('../models/User');
 let File = require ('../models/File');
-let Grid = require ('gridfs-stream');
+let multer = require ('multer');
+let multerS3 = require ('multer-s3');
+const S3Upload = require ('../models/S3Upload');
+const mime = require ('mime');
+const AWS = require ('aws-sdk');
+const s3 = new AWS.S3 ();
+const bucket = 'image-bucket-for-tmg-frontend';
+const MB = 1024 * 1024;
+const fileSize = 100 * MB;
+
+// multer/multers3 file store in aws s3 bucket
+const upload = multer ({
+  storage: multerS3 ({
+    s3,
+    bucket,
+    metadata: (req, file, cb) => {
+      cb (null, {fieldName: file.fieldname});
+    },
+    key: (req, file, cb) => {
+      let s3upload = new S3Upload ({
+        user: req.user._id,
+        name: file.filename,
+        alt: file.filename,
+        mime: file.mimetype,
+        extension: mime.getExtension (file.mimetype)
+      });
+      s3upload.save ();
+      console.log (`${req.user._id}/${s3upload._id}.${mime.getExtension (file.mimetype)}`);
+      cb (null, `${req.user._id}/${s3upload._id}.${mime.getExtension (file.mimetype)}`);
+    }
+  }),
+})
 
 let router = express.Router ();
 
@@ -51,7 +82,7 @@ router.post ('/users', async (req, res) => {
     if (exists) throw new Error ('username already exists in namespace');
     // validate other fields
     let body = {};
-    ['first', 'last', 'location', 'preferences', 'profilePicture'].forEach ((prop) => {
+    ['first', 'last', 'location', 'preferences'].forEach ((prop) => {
       if (req.body [prop]) body [prop] = req.body [prop];
     });
     // create user
@@ -75,7 +106,7 @@ router.post ('/users', async (req, res) => {
 router.get ('/me', async (req, res) => {
   if (!req.user) return res.status (404).end ();
   let ret = {};
-  ['_id', 'first', 'last', 'username', 'preferences', 'lastActive', 'createdAt', 'admin', 'votes', 'profilePicture'].forEach ((prop) => {
+  ['_id', 'subscribed', 'paidThrough', 'email', 'first', 'last', 'username', 'preferences', 'lastActive', 'createdAt', 'admin', 'votes', 'profilePicture'].forEach ((prop) => {
     if (req.user [prop]) ret [prop] = req.user [prop];
   });
   res.json (ret);
@@ -119,59 +150,19 @@ router.delete ('/sessions', async (req, res) => {
 router.get ('/files', async (req, res) => {
   // wrap in t/c
   try {
-    if (!req.user) return res.status (401).end ();
-    let files = await File.find ({user: req.user._id}).exec ();
+    let opts = {};
+    if (req.user) opts.user = req.user._id;
+    let files = await S3Upload.find (opts).exec ();
     res.json (files);
   } catch (e) {
     console.log (e);
     res.status (500).json (e);
   }
 });
-// get a file
-router.get ('/files/:id', async (req, res) => {
-  try {
-    // setup grid
-    Grid.mongo = require ('mongoose').mongo;
-    const gfs = Grid (require ('mongoose').connection.db);
-    // grab the file db record and make sure it exists
-    let file = await File.findOne ({_id: req.params.id}).exec ();
-    if (!file) return res.status (404).end ();
-    // check that the file exists
-    gfs.exist ({_id: file.file}, (err, found) => {
-      if (err || !found) return res.status (404).end ();
-      // send headers and file
-      res.set ('Content-Type', file.mime);
-      res.set ('Cache-Control', `max-age=${60 * 60 * 24 * 31}`);
-      gfs.createReadStream ({
-        _id: file.file
-      }).pipe (res);
-    });
-  } catch (e) {
-    // send 500 error
-    res.status (500).json (e);
-  }
-});
-// edit a file
-router.put ('/files/:id', async (req, res) => {
-  try {
-    // setup grid
-    Grid.mongo = require ('mongoose').mongo;
-    const gfs = Grid (require ('mongoose').connection.db);
-    // grab the file db record and make sure it exists
-    let file = await File.findOne ({_id: req.params.id}).exec ();
-    if (!file) return res.status (404).end ();
-    // check that this is the owner
-    if (!objectIdEquals (req.user._id, file.user._id)) return res.status (401);
-    ['filename', 'file'].forEach ((prop) => {
 
-    });
-  } catch (e) {
-
-  }
-})
 // echo with posting files
-router.post ('/files', (req, res) => {
-  res.json (req.body);
+router.post ('/files', upload.any (), (req, res) => {
+  res.json (req.files);
 });
 
 module.exports = router;

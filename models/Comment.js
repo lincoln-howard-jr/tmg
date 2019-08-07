@@ -6,9 +6,12 @@ const CommentSchema = new mongoose.Schema ({
     ref: 'User',
     required: true
   },
-  forum: {
+  type: {
+    type: String,
+    required: true
+  },
+  parent: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Forum',
     required: true
   },
   comment: {
@@ -18,10 +21,6 @@ const CommentSchema = new mongoose.Schema ({
   createdAt: {
     type: Date,
     default: Date.now
-  },
-  likes: {
-    type: Number,
-    default: 0
   }
 })
 
