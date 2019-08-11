@@ -276,7 +276,7 @@ router.post ('/current-election/my-cause', electionMiddleware, async (req, res) 
   }
 });
 
-router.post ('/current-election/votes', electionMiddleware)
+router.post ('/current-election/votes', electionMiddleware);
 
 module.exports = router;
 
