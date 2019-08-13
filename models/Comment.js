@@ -26,6 +26,7 @@ const CommentSchema = new mongoose.Schema ({
 
 function populate () {
   this.populate ({path: 'user', select: '_id first last username lastActive profilePicture'});
+  this.populate ('parent');
 }
 
 CommentSchema.pre ('find', populate);

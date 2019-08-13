@@ -96,8 +96,8 @@ const didILike = async (user, parent) => {
   return new Promise (async (resolve, reject) => {
     try {
       if (!user) throw 'User not defined';
-      let exists = await Like.exists ({user: user._id, parent});
-      resolve (exists);
+      let results = await Like.find ({user: user._id, parent}).limit (1).exec ();
+      return resolve (!!results.length);
     } catch (e) {
       reject (e);
     }
