@@ -69,4 +69,19 @@ router.post ('/payments', getStripeUser, async (req, res) => {
   }
 });
 
+router.delete ('/payments', getStripeUser, async (req, res) => {
+  // t/c
+  try {
+    req.user.subscribed = false;
+    await req.user.save ()
+    req.customer.subscriptions.data.forEach(sub => {
+      stripe.subscriptions.update (sub.id, {cancel_at_period_end: true});
+    });
+    res.json ('');
+  } catch (e) {
+    console.log (e);
+    res.status (500).json ({success: false, reason: e});
+  }
+})
+
 module.exports = router;
