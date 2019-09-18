@@ -3,6 +3,7 @@ var app = express ();
 let mongoose = require ('mongoose');
 const AWS = require ('aws-sdk');
 let getEnv = require ('./getEnv');
+const {dbMiddleware} = require ('./config/connectToDb');
 let sessions = require ('./config/sessions');
 global.passport = require ('passport');
 // body parser imports
@@ -80,7 +81,7 @@ app.options ('*', cors, (req, res) => {
 app.use (cors);
 
 app.use (updateAWSConfig)
-app.use (connectToDb);
+app.use (dbMiddleware);
 app.use (sessions);
 app.use (json ());
 app.use (urlencoded ({extended: true}));

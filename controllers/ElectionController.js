@@ -276,9 +276,8 @@ router.post ('/current-election/my-cause', electionMiddleware, async (req, res) 
   }
 });
 
-router.post ('/current-election/votes', electionMiddleware);
+router.post ('/current-election/votes', electionMiddleware, async (req, res) => {
+
+});
 
 module.exports = router;
-
-
-// curl -b cookiefile -H "Content-Type: application/json" -X POST -d '{"actionPlan": "Here is my plan of action", "title": "title"}' http://localhost:8000/api/current-election/my-cause

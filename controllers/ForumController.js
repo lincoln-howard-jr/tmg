@@ -91,6 +91,22 @@ const getLikeCount = async (type, parent) => {
     }
   });
 }
+// get comment count on a commentable type object
+// no type checking
+const getCommentCount = async (type, parent) => {
+  // async method returns promise
+  return new Promise (async (resolve, reject) => {
+    // wrap in t/c
+    try {
+      // ensure object found (type checking also done in global#exists)
+      await exists (type, parent);
+      let results = Comment.countDocuments ({type, parent}).exec ();
+      resolve (results);
+    } catch (e) {
+      reject (e);
+    }
+  });
+}
 // get whether or not logged in user liked a likeable object
 const didILike = async (user, parent) => {
   return new Promise (async (resolve, reject) => {
@@ -150,6 +166,19 @@ const didILike = async (user, parent) => {
 const getCommentsMiddleware =  async (req, res, next) => {
   try {
     let comments = await getCommentsOn (req.params.type, req.params.parent, req.query);
+    comments = await Promise.all (comments.map ((c) => {
+      return new Promise (async (resolve) => {
+        try {
+          let clikes = await getLikeCount ('comments', c._id);
+          let subCommentCount = await getCommentCount ('comments', c._id);
+          let cDidILike = false;
+          if (req.user) cDidILike = await didILike (req.user, c._id);
+          resolve ({...c, likes: clikes, subCommentCount, didIlike: cDidILike});
+        } catch (e) {
+          resolve ({...c});
+        }
+      });
+    }));
     req.comments = comments;
     next ();
   } catch (e) {
@@ -192,10 +221,11 @@ const getForumsMiddleware = async (req, res, next) => {
           comments = await Promise.all (comments.map ((c) => {
             try {
               return new Promise (async (sub_resolve) => {
-                let clikes = getLikeCount ('comments', c._id);
+                let clikes = await getLikeCount ('comments', c._id);
+                let subCommentCount = await getCommentCount ('comments', c._id);
                 let cDidILike = false;
                 if (req.user) cDidILike = await didILike (req.user, c._id);
-                sub_resolve ({...c, likes: clikes, didIlike: cDidILike});
+                sub_resolve ({...c, likes: clikes, subCommentCount, didIlike: cDidILike});
               });
             } catch (e) {
               console.log (e);
@@ -222,6 +252,7 @@ router.get ('/forums', getForumsMiddleware, (req, res) => {
 });
 // create a comment
 router.post ('/comments/:type/:parent', async (req, res) => {
+  console.log (req.body);
   try {
     let comment = new Comment ({
       user: req.user._id,
@@ -231,6 +262,21 @@ router.post ('/comments/:type/:parent', async (req, res) => {
     });
     await comment.save ();
     res.json (comment);
+  } catch (e) {
+    console.log (e);
+    res.status (500).end ();
+  }
+});
+// create a like
+router.post ('/likes/:type/:parent', async (req, res) => {
+  try {
+    let like = new Like ({
+      user: req.user._id,
+      type: req.params.type,
+      parent: req.params.parent
+    })
+    await like.save ();
+    res.json (like);
   } catch (e) {
     console.log (e);
     res.status (500).end ();

@@ -10,7 +10,7 @@ let LikeSchema = new mongoose.Schema ({
     type: String,
     required: true
   },
-  parnet: {
+  parent: {
     type: mongoose.Schema.Types.ObjectId
   }
 })
