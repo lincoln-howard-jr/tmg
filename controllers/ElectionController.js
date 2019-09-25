@@ -50,7 +50,9 @@ const getMyCause = async (election, user) => {
 
 const myCauseMiddleware = async (req, res, next) => {
   try {
+    console.log (req.election._id, req.user._id);
     req.cause = await getMyCause (req.election, req.user);
+    console.log (req.cause);
     next ();
   } catch (e) {
     console.log (`err in myCauseMiddleware for ${req.path} for user with _id: [${req.user ? req.user._id : 'n/a'}]`);
@@ -171,14 +173,16 @@ const getCauses = async (election, query) => {
 
 // revise a cause with new title and action plan, resolve with
 const reviseCause = async (election, user, title, actionPlan) => {
+  console.log (election, user, title, actionPlan);
   return new Promise (async (resolve, reject) => {
     try {
       let phase = getPhaseOf (election);
-      let prev = await Cause.findOne ({ election, phase, user: user._id, old: false }).exec ();
-      if (!prev) return reject ('Cause not found');
-      prev.old = true;
-      await prev.save ();
-      let cause = new Cause ({election, phase, title, actionPlan, user: user._id, prev});
+      let prev = await Cause.findOne ({ election: election._id, phase, user: user._id, old: false }).exec ();
+      if (prev) {
+        prev.old = true;
+        await prev.save ();
+      }
+      let cause = new Cause ({election: election._id, phase, title, actionPlan, user: user._id, prev});
       await cause.save ();
       resolve (cause.toObject ());
     } catch (e) {
@@ -211,7 +215,7 @@ const getAllRevisions = async (cause) => {
         next = _n.prev;
         revisions.push (_n);
       }
-      resolve (revisions);
+      resolve ({...cause, revisions});
     } catch (e) {
       reject (e);
     }
@@ -268,6 +272,7 @@ router.get ('/current-election/my-cause', electionMiddleware, myCauseMiddleware,
 
 router.post ('/current-election/my-cause', electionMiddleware, async (req, res) => {
   try {
+    console.log (req.election, req.user, req.body);
     let cause = await reviseCause (req.election, req.user, req.body.title, req.body.actionPlan);
     res.json (cause);
   } catch (e) {
@@ -277,7 +282,11 @@ router.post ('/current-election/my-cause', electionMiddleware, async (req, res) 
 });
 
 router.post ('/current-election/votes', electionMiddleware, async (req, res) => {
+  try {
 
+  } catch (e) {
+    
+  }
 });
 
 module.exports = router;
