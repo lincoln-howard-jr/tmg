@@ -83,5 +83,17 @@ router.delete ('/payments', getStripeUser, async (req, res) => {
     res.status (500).json ({success: false, reason: e});
   }
 })
+// retrieve balance for stripe stuff
+router.get ('/balance', async (req, res) => {
+  // t/c
+  try {
+    stripe.balance.retrieve ((err, balance) => {
+      if (err) return res.status (500).json (err);
+      res.json (balance);
+    });
+  } catch (e) {
+
+  }
+});
 
 module.exports = router;

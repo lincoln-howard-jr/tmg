@@ -2,7 +2,6 @@
 let express = require ('express');
 let mongoose = require ('mongoose');
 let User = require ('../models/User');
-let File = require ('../models/File');
 let multer = require ('multer');
 let multerS3 = require ('multer-s3');
 const S3Upload = require ('../models/S3Upload');
@@ -24,13 +23,12 @@ const upload = multer ({
     key: (req, file, cb) => {
       let s3upload = new S3Upload ({
         user: req.user._id,
-        name: file.filename,
-        alt: file.filename,
+        name: file.originalname,
+        alt: file.fieldname,
         mime: file.mimetype,
         extension: mime.getExtension (file.mimetype)
       });
       s3upload.save ();
-      console.log (`${req.user._id}/${s3upload._id}.${mime.getExtension (file.mimetype)}`);
       cb (null, `${req.user._id}/${s3upload._id}.${mime.getExtension (file.mimetype)}`);
     }
   }),
@@ -71,7 +69,7 @@ router.get ('/users/:id', async (req, res) => {
 });
 
 router.post ('/users', async (req, res) => {
-  if (req.user) res.status (404).json ();
+  if (req.user) res.status (404).end ();
   // validation
   try {
     console.log (req.body);
@@ -128,41 +126,40 @@ router.delete ('/me', async (req, res) => {
 // session controller section
 //
 router.post ('/sessions', passport.authenticate ('local'), (req, res) => {
-  if (!req.user) return res.status (401).json ({});
+  if (!req.user) return res.status (401).send ('User could not be authenticated...');
   let ret = {};
   ['_id', 'first', 'last', 'username', 'preferences', 'lastActive', 'createdAt', 'admin', 'votes', 'profilePicture'].forEach ((prop) => {
     if (req.user [prop]) ret [prop] = req.user [prop];
   });
   res.json (ret);
 });
-
+// log out
 router.delete ('/sessions', async (req, res) => {
   if (!req.user) return res.status (401).end ();
   req.session.destroy ();
   res.clearCookie ('tmg.sid');
   res.json ({});
 })
-
+// update password
+router.post ('/update-password', async (req, res) => {
+  
+});
 // 
 // file controller section
-// 
-// get all files from this user
-router.get ('/files', async (req, res) => {
-  // wrap in t/c
-  try {
-    let opts = {};
-    if (req.user) opts.user = req.user._id;
-    let files = await S3Upload.find (opts).exec ();
-    res.json (files);
-  } catch (e) {
-    console.log (e);
-    res.status (500).json (e);
-  }
-});
-
 // echo with posting files
 router.post ('/files', upload.any (), (req, res) => {
   res.json (req.files);
+});
+
+router.get ('/files', async (req, res) => {
+  if (!req.user) return res.status (401).end ();
+  try {
+    let uploads = await S3Upload.find ({user: req.user._id}).exec ();
+    res.json (uploads);
+  } catch (e) {
+    console.log (e);
+    res.status (500).end ();
+  }
 });
 
 module.exports = router;

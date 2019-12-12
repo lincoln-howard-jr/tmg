@@ -7,7 +7,6 @@ const {dbMiddleware} = require ('./config/connectToDb');
 let sessions = require ('./config/sessions');
 global.passport = require ('passport');
 // body parser imports
-let bgs = require ('./config/bgs');
 let {json, urlencoded} = require ('body-parser');
 
 const logger = (req, res, next) => {
@@ -66,7 +65,6 @@ const connectToDb = async (req, res, next) => {
 
 const whitelist = ['https://www.themetropolitanglobal.com', 'https://www.metropolitanglobal.com', 'http://localhost:3000'];
 const cors = (req, res, next) => {
-  if (whitelist.indexOf (req.headers.origin) === -1) return res.status (403).json ({reason: 'CORS not enabled'});
   res.set ('Access-Control-Allow-Origin', req.headers.origin);
   res.set ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.set ('Access-Control-Allow-Headers', 'content-type, origin, accept');
@@ -77,6 +75,8 @@ const cors = (req, res, next) => {
 app.options ('*', cors, (req, res) => {
   res.json ({cors: true});
 });
+
+app.use (logger);
 
 app.use (cors);
 

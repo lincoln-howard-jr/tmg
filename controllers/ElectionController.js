@@ -3,13 +3,16 @@ const Cause = require ('../models/Cause');
 const Vote = require ('../models/Vote');
 const User = require ('../models/User');
 const {DateRange, MonthDayYear, MonthYear} = require ('../models/types');
+const {getByType, getCommentsOn, getLikeCount, getCommentCount, didILike} = require ('./helpers');
 
 const router = require ('express').Router ();
 
 // qs defaults
 const defaults = {
   offset: 0,
-  limit: 25
+  limit: 25,
+  user: false,
+  now: new MonthDayYear ()
 }
 
 const initElection = async (my=new MonthYear ()) => {
@@ -21,7 +24,6 @@ const initElection = async (my=new MonthYear ()) => {
       let general = new DateRange (generalStart, generalStart.next ()).toJSON ();
       month = my.toJSON ();
       let election = new Election ({ month, prelim, general });
-      console.log (election);
       await election.save ();
       resolve (election);
     } catch (e) {
@@ -37,7 +39,11 @@ const getMyCause = async (election, user) => {
       let phase = getPhaseOf (election);
       if (phase === 'concluded' || phase === 'embryo' || phase === 'general') reject ('cannot create new causes');
       let found = await Cause.findOne ({ election, phase, user: user._id, old: false }).lean ().exec ();
-      if (found) found = await getAllRevisions (found);
+      if (found) {
+        found = await getAllRevisions (found, {user});
+        found.likeCount = await getLikeCount ('causes', found._id);
+        found.comments = await getCommentsOn ('causes', found._id);
+      }
       if (found) return resolve (found);
       let cause = new Cause ({ election, phase, user: user._id });
       await cause.save ();
@@ -115,7 +121,6 @@ const getElection = async (my=new MonthYear ()) => {
     try {
       // await find current mm/yyyy election
       let elec = await Election.findOne ({month: my.toJSON ()}).lean ().exec ();
-      console.log (my.toJSON (), elec);
       resolve (elec);
     } catch (e) {
       reject (e);
@@ -126,10 +131,11 @@ const getElection = async (my=new MonthYear ()) => {
 // if election not found sends 404, if error logs error and send 500
 const electionMiddleware = async (req, res, next) => {
   try {
+    let my = new MonthYear ();
     if (req.params.mm && req.params.yyyy) {
       let month = parseInt (req.params.mm);
       let year = parseInt (req.params.yyyy);
-      let my = new MonthYear ({month, year});
+      my = new MonthYear ({month, year});
       let election = await getElection (my);
       if (!election) return res.status (404).send (`election not found for ${month}/${year}`);
       req.election = election;
@@ -138,7 +144,12 @@ const electionMiddleware = async (req, res, next) => {
       if (!election) throw `election not found for current month/year`;
       req.election = election;
     }
-    req.phase = getPhaseOf (req.election);
+    let now = new MonthDayYear ();
+    if (req.params.dddd) {
+      let day = parseInt (req.params.dddd);
+      now = new MonthDayYear ({...my, day});
+    }
+    req.phase = getPhaseOf (req.election, now);
     next ();
   } catch (e) {
     console.log (`err in electionMiddleware for ${req.path} for user with _id: [${req.user ? req.user._id : 'n/a'}]`);
@@ -147,17 +158,20 @@ const electionMiddleware = async (req, res, next) => {
   }
 }
 // retrieve causes for a specific election
-const getCauses = async (election, query) => {
+const getCauses = async (election, query, id) => {
   return new Promise (async (resolve, reject) => {
     try {
       let qs = Object.assign (defaults, query);
-      let phase = getPhaseOf (election);
-      let causes = await Cause.find ({election, phase, old: false}).skip (qs.offset).limit (qs.limit).lean ().exec ();
+      let phase = getPhaseOf (election, qs.now);
+      let causes = await getByType ('causes', {election: election._id}, id);
       causes = await Promise.all (causes.map ((c) => {
         return new Promise (async (resolve, reject) => {
           try {
-            let revisions = await getAllRevisions (c);
-            resolve ({...c, revisions});
+            let wRevs = await getAllRevisions (c, query);
+            wRevs.likeCount = await getLikeCount ('causes', c._id, query);
+            wRevs.comments = await getCommentsOn ('causes', c._id, query);
+            wRevs.didILike = (query.user ? await didILike (query.user, c._id) : false);
+            resolve (wRevs);
           } catch (e) {
             console.log (e);
             reject (e);
@@ -177,7 +191,7 @@ const reviseCause = async (election, user, title, actionPlan) => {
   return new Promise (async (resolve, reject) => {
     try {
       let phase = getPhaseOf (election);
-      let prev = await Cause.findOne ({ election: election._id, phase, user: user._id, old: false }).exec ();
+      let prev = await Cause.findOne ({election: election._id, phase, user: user._id, old: false }).exec ();
       if (prev) {
         prev.old = true;
         await prev.save ();
@@ -192,10 +206,14 @@ const reviseCause = async (election, user, title, actionPlan) => {
 }
 
 // get revisions on a cause
-const getCauseById = async (id) => {
+const getCauseById = async (_id, query) => {
   return new Promise (async (resolve, reject) => {
     try {
-      resolve (await Cause.findOne ({_id: id}).lean ().exec ());
+      let cause = await Cause.findOne ({_id}).lean ().exec ();
+      cause.likeCount = await getLikeCount ('causes', _id);
+      cause.comments = await getCommentsOn ('causes', _id);
+      cause.didILike = (query.user ? await didILike (query.user, _id) : false);
+      resolve (cause);
     } catch (e) {
       reject (e);
     }
@@ -203,15 +221,13 @@ const getCauseById = async (id) => {
 }
 
 // 
-const getAllRevisions = async (cause) => {
+const getAllRevisions = async (cause, query) => {
   return new Promise (async (resolve, reject) => {
     try {
       let revisions = [];
       let next = cause.prev;
       while (!!next) {
-        console.log (`get cause with id ${next}`);
-        let _n = await getCauseById (next);
-        console.log (_n);
+        let _n = await getCauseById (next, query);
         next = _n.prev;
         revisions.push (_n);
       }
@@ -227,7 +243,11 @@ const getAllRevisions = async (cause) => {
 // 500 error if unknown error found
 const causeMiddleware = async (req, res, next) => {
   try {
-    req.causes = await getCauses (req.election, req.query);
+    if (req.params.id) {
+      req.causes = await getCauseById (req.params.id, {...req.query, user: req.user});
+    } else {
+      req.causes = await getCauses (req.election, {...req.query, user: req.user});
+    }
     next ();
   } catch (e) {
     console.log (`err in causeMiddleware for ${req.path} for user with _id: [${req.user ? req.user._id : 'n/a'}]`);
@@ -236,9 +256,8 @@ const causeMiddleware = async (req, res, next) => {
   }
 }
 
-const getPhaseOf = (election) => {
+const getPhaseOf = (election, now=new MonthDayYear ()) => {
   // compare everything to now
-  let now = new MonthDayYear ();
   if (now.compare (election.prelim.open) !== now.compare (election.prelim.close)) return 'prelim';
   if (now.compare (election.general.open) !== now.compare (election.general.open)) return 'general';
   if (now.compare (election.prelim.close) !== now.compare (election.general.close)) return 'intermediate';
@@ -246,7 +265,7 @@ const getPhaseOf = (election) => {
   return 'concluded';
 }
 
-router.get ('/elections/:mm,:yyyy', electionMiddleware, (req, res) => {
+router.get ('/elections/:mm,:dddd,:yyyy', electionMiddleware, (req, res) => {
   res.json ({...req.election, phase: req.phase});
 });
 
@@ -254,7 +273,7 @@ router.get ('/current-election', electionMiddleware, (req, res) => {
   res.json ({...req.election, phase: req.phase});
 });
 
-router.get ('/elections/:mm,:yyyy/causes', electionMiddleware, causeMiddleware, (req, res) => {
+router.get ('/elections/:mm,:dddd,:yyyy/causes', electionMiddleware, causeMiddleware, (req, res) => {
   res.json (req.causes);
 });
 
@@ -262,7 +281,7 @@ router.get ('/current-election/causes', electionMiddleware, causeMiddleware, (re
   res.json (req.causes);
 });
 
-router.get ('/elections/:mm,:yyyy/my-cause', electionMiddleware, myCauseMiddleware, (req, res) => {
+router.get ('/elections/:mm,:dddd,:yyyy/my-cause', electionMiddleware, myCauseMiddleware, (req, res) => {
   res.json (req.cause);
 });
 
@@ -280,6 +299,8 @@ router.post ('/current-election/my-cause', electionMiddleware, async (req, res) 
     res.status (500).end ();
   }
 });
+
+router.get ('/current-election/causes/:id', electionMiddleware)
 
 router.post ('/current-election/votes', electionMiddleware, async (req, res) => {
   try {

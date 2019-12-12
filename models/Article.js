@@ -2,11 +2,13 @@ const {Schema, model, user, reqStr, now, mdy} = require ('./types');
 const ArticleSchema = new Schema ({
   user,
   title: reqStr,
+  author: reqStr,
   summary: reqStr,
   tags: [String],
   url: reqStr,
   publishedDate: mdy,
-  shared: now
+  shared: now,
+  source: String
 });
 
 function populate () {

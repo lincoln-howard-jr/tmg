@@ -1,0 +1,58 @@
+{
+	"user": {
+		"_id": "5d93b314f35fde1e4b11ca8c",
+		"admin": false,
+		"subscribed": false,
+		"first": "Sahnun",
+		"last": "Mohamud",
+		"email": "sahnunhm@gmail.com",
+		"username": "big-bawss",
+		"phone": "",
+		"password": "$2a$10$h3PQm2bi3BNV7eleCpGAUewng1iluy/uf34dzDI0nzFDTwVVclUC2",
+		"createdAt": "2019-10-01T20:12:04.196Z",
+		"__v": 0
+	},
+	"election": {
+		"_id": "5d8abdd51bf06ea1612d879f",
+		"prelim": {
+			"open": {
+				"month": 9,
+				"year": 2019,
+				"day": 1
+			},
+			"close": {
+				"month": 9,
+				"year": 2019,
+				"day": 2
+			}
+		},
+		"general": {
+			"open": {
+				"month": 9,
+				"year": 2019,
+				"day": 29
+			},
+			"close": {
+				"month": 9,
+				"year": 2019,
+				"day": 30
+			}
+		},
+		"month": {
+			"month": 9,
+			"year": 2019
+		},
+		"__v": 0
+	},
+	"cause": {
+		"old": false,
+		"_id": "5d93bd1baddb821f70e298f6",
+		"user": "5d93b314f35fde1e4b11ca8c",
+		"election": "5d8abdd51bf06ea1612d879f",
+		"phase": "prelim",
+		"title": "Help The Homeless",
+		"actionPlan": "",
+		"created": "2019-10-01T20:54:51.931Z",
+		"__v": 0
+	}
+}
