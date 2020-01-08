@@ -1,5 +1,6 @@
 const router = require ('express').Router ();
 const Article = require ('../models/Article');
+const Source = require ('../models/Source');
 
 const format = article => {
   return {
@@ -115,7 +116,7 @@ router.get ('/articles', async (req, res) => {
 // share an article
 router.post ('/articles', async (req, res) => {
   try {
-    if (!req.user) res.status (401).end ();
+    if (!req.user) return res.status (401).end ();
     let obj = {user: req.user._id, publishedDate: {}};
     let err = [];
     // validation
@@ -139,4 +140,27 @@ router.post ('/articles', async (req, res) => {
   }
 });
 
+// 
+// sources 
+// 
+router.get ('/sources', async (req, res) => {
+  try {
+    let sources = await getByType ('sources', {user: req.user});
+    res.json (sources);
+  } catch (e) {
+    console.log (e)
+    res.status (500).end ();
+  }
+})
+
+router.post ('/sources', async (req, res) => {
+  try {
+    if (!req.user) return res.status (401).end ();
+    let source = new Source (req.body);
+    res.json (source);
+  } catch (e) {
+    console.log (e);
+    res.status (500).end ();
+  }
+})
 module.exports = router;
