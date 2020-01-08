@@ -157,6 +157,7 @@ router.post ('/sources', async (req, res) => {
   try {
     if (!req.user) return res.status (401).end ();
     let source = new Source (req.body);
+    source.save ();
     res.json (source);
   } catch (e) {
     console.log (e);
