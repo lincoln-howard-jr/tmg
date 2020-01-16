@@ -265,16 +265,16 @@ const getPhaseOf = (election, now=new MonthDayYear ()) => {
   return 'concluded';
 }
 
-router.get ('/elections', async (req, res) => {
-  try {
-    let elections = await Election.find ({}).lean ().exec ();
-    let now = new MonthDayYear ();
-    elections = elections.map (e => Object.assign (e, {phase: getPhaseOf (e, now)}));
-  } catch (e) {
-    console.log (e);
-    res.status (500).end ();
-  }
-});
+// router.get ('/elections', async (req, res) => {
+//   try {
+//     let elections = await Election.find ({}).lean ().exec ();
+//     let now = new MonthDayYear ();
+//     elections = elections.map (e => Object.assign (e, {phase: getPhaseOf (e, now)}));
+//   } catch (e) {
+//     console.log (e);
+//     res.status (500).end ();
+//   }
+// });
 
 router.get ('/elections/:mm,:dddd,:yyyy', electionMiddleware, (req, res) => {
   res.json ({...req.election, phase: req.phase});

@@ -104,7 +104,7 @@ router.post ('/users', async (req, res) => {
 router.get ('/me', async (req, res) => {
   if (!req.user) return res.status (404).end ();
   let ret = {};
-  ['_id', 'subscribed', 'paidThrough', 'email', 'first', 'last', 'username', 'preferences', 'lastActive', 'createdAt', 'admin', 'votes', 'profilePicture'].forEach ((prop) => {
+  ['_id', 'subscribed', 'paidThrough', 'email', 'first', 'last', 'username', 'preferences', 'lastActive', 'createdAt', 'admin', 'votes', 'profilePicture', 'bio'].forEach ((prop) => {
     if (req.user [prop]) ret [prop] = req.user [prop];
   });
   res.json (ret);
@@ -112,7 +112,7 @@ router.get ('/me', async (req, res) => {
 
 router.put ('/me', async (req, res) => {
   if (!req.user) return res.status (404).end ();
-  ['preferences', 'profilePicture'].forEach ((prop) => {
+  ['preferences', 'profilePicture', 'bio'].forEach ((prop) => {
     if (req.body [prop]) req.user [prop] = req.body [prop];
   });
   req.user.save ();
@@ -128,7 +128,7 @@ router.delete ('/me', async (req, res) => {
 router.post ('/sessions', passport.authenticate ('local'), (req, res) => {
   if (!req.user) return res.status (401).send ('User could not be authenticated...');
   let ret = {};
-  ['_id', 'first', 'last', 'username', 'preferences', 'lastActive', 'createdAt', 'admin', 'votes', 'profilePicture'].forEach ((prop) => {
+  ['_id', 'first', 'last', 'username', 'preferences', 'lastActive', 'createdAt', 'admin', 'votes', 'profilePicture', 'bio'].forEach ((prop) => {
     if (req.user [prop]) ret [prop] = req.user [prop];
   });
   res.json (ret);
