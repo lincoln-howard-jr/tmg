@@ -28,6 +28,15 @@ let UserSchema = new mongoose.Schema ({
     year: Number
   }
 });
+
+function populate () {
+  this.populate ('profilePicture');
+}
+
+UserSchema.pre ('find', populate);
+UserSchema.pre ('findById', populate);
+UserSchema.pre ('findOne', populate);
+
 // create text search
 UserSchema.index ({
   username: 'text',
